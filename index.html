@@ -4,150 +4,181 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riftbound Marketplace</title>
-    <!-- Framework Tailwind para estilização rápida -->
+    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Arquivo CSS para estilos que o Tailwind não cobrir (se precisar no futuro) -->
     <link rel="stylesheet" href="css/style.css">
     
-    <!-- Configuração de cores customizadas do Tailwind para o tema do jogo -->
+    <!-- Configurações de cores do Tailwind -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        rift: {
-                            dark: '#0f172a',
-                            panel: '#1e293b',
-                            primary: '#8b5cf6',
-                            accent: '#c084fc'
-                        }
+                        rift: { dark: '#0f172a', panel: '#1e293b', primary: '#8b5cf6', accent: '#c084fc' }
                     }
                 }
             }
         }
     </script>
+    <style>
+        /* Esconde a barra de rolagem horizontal da navegação */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
 <body class="bg-rift-dark text-gray-100 font-sans antialiased min-h-screen flex flex-col">
 
-    <!-- Cabeçalho com Logo e Perfil Pré-carregado -->
-    <header class="bg-rift-panel border-b border-gray-700 shadow-lg">
+    <!-- CABEÇALHO -->
+    <header class="bg-rift-panel border-b border-gray-700 shadow-lg relative z-30">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rift-primary to-rift-accent tracking-wider">
                 RIFTBOUND<span class="text-gray-100 font-light">Market</span>
             </h1>
             
-            <!-- Perfil Logado Mockado -->
-            <div class="flex items-center space-x-3 bg-gray-800 px-4 py-2 rounded-full border border-gray-700 shadow-inner">
-                <img src="https://ui-avatars.com/api/?name=Mestre+Do+Portal&background=8b5cf6&color=fff&bold=true" alt="Avatar do Jogador" class="w-8 h-8 rounded-full border border-rift-primary">
-                <span class="font-medium text-sm text-gray-200">@MestreDoPortal</span>
-                <!-- Bolinha verde simulando "Online" -->
-                <span class="w-2.5 h-2.5 bg-green-500 rounded-full inline-block shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
+            <div class="flex items-center space-x-4">
+                <!-- Botão de Notificações (Sininho) -->
+                <button id="btn-notificacoes" class="relative text-gray-300 hover:text-white transition-colors cursor-pointer">
+                    <span class="text-2xl">🔔</span>
+                    <span id="contador-notificacoes" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+                </button>
+
+                <!-- Perfil e Troca de Conta -->
+                <div class="flex items-center space-x-3 bg-gray-800 px-4 py-2 rounded-full border border-gray-700 shadow-inner">
+                    <img id="header-avatar" src="" alt="Avatar" class="w-8 h-8 rounded-full border border-rift-primary">
+                    <select id="seletor-usuario" class="bg-transparent text-gray-200 font-medium text-sm focus:outline-none cursor-pointer">
+                        <option value="MestreDoPortal">@MestreDoPortal</option>
+                        <option value="DarkSlayer">@DarkSlayer</option>
+                    </select>
+                    <span class="w-2.5 h-2.5 bg-green-500 rounded-full inline-block shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
+                </div>
             </div>
         </div>
     </header>
 
-    <!-- Navegação das Abas -->
+    <!-- NAVEGAÇÃO DAS ABAS -->
     <nav class="bg-rift-panel/80 sticky top-0 backdrop-blur-md z-10 border-b border-gray-800">
         <div class="container mx-auto px-4 flex space-x-2 overflow-x-auto hide-scrollbar">
-            <button data-target="noticias" class="tab-btn active px-6 py-4 text-sm font-bold border-b-2 border-rift-primary text-rift-accent whitespace-nowrap hover:bg-gray-700/30 transition-colors">
-                Últimas Notícias
-            </button>
-            <button data-target="colecao" class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500 whitespace-nowrap hover:bg-gray-700/30 transition-colors">
-                Minha Coleção
-            </button>
-            <button data-target="vitrine" class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500 whitespace-nowrap hover:bg-gray-700/30 transition-colors">
-                Minha Vitrine
-            </button>
-            <button data-target="lojas" class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500 whitespace-nowrap hover:bg-gray-700/30 transition-colors">
-                Lojas Parceiras
-            </button>
+            <button data-target="mercado" class="tab-btn active px-6 py-4 text-sm font-bold border-b-2 border-rift-primary text-rift-accent whitespace-nowrap hover:bg-gray-700/30 transition-colors">Mercado Global</button>
+            <button data-target="colecao" class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-200 whitespace-nowrap hover:bg-gray-700/30 transition-colors">Minha Coleção</button>
+            <button data-target="vitrine" class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-200 whitespace-nowrap hover:bg-gray-700/30 transition-colors">Minha Vitrine</button>
+            <button data-target="busca" class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-200 whitespace-nowrap hover:bg-gray-700/30 transition-colors">Buscar Cartas</button>
         </div>
     </nav>
 
-    <!-- Conteúdo Principal -->
+    <!-- CONTEÚDO PRINCIPAL -->
     <main class="container mx-auto px-4 py-8 flex-grow">
         
-        <!-- Aba: Últimas Notícias -->
-        <section id="noticias" class="tab-content block">
-            <h2 class="text-3xl font-bold mb-6 text-gray-100 border-l-4 border-rift-primary pl-4">Últimas Notícias de Riftbound</h2>
-            <!-- Container onde o JS vai renderizar as notícias -->
-            <div id="noticias-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Vazio propositalmente -->
+        <!-- ABA 1: MERCADO GLOBAL -->
+        <section id="mercado" class="tab-content block">
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <h2 id="mercado-titulo" class="text-3xl font-bold text-gray-100 border-l-4 border-rift-primary pl-4">Mercado Global</h2>
+                    <span id="mercado-subtitulo" class="text-sm text-gray-400 block mt-1 ml-5">Vitrines de outros jogadores</span>
+                </div>
+                <button id="btn-voltar-mercado" class="hidden bg-gray-700 hover:bg-gray-600 text-white px-5 py-2 rounded-lg font-bold transition-all border border-gray-600">&larr; Voltar</button>
             </div>
+            <div id="mercado-lojas-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+            <div id="mercado-cartas-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 hidden"></div>
         </section>
 
-       <!-- Aba: Minha Coleção -->
+        <!-- ABA 2: MINHA COLEÇÃO -->
         <section id="colecao" class="tab-content hidden">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h2 class="text-3xl font-bold text-gray-100 border-l-4 border-rift-primary pl-4">Minha Coleção</h2>
-                
-                <!-- Botões de controle de edição -->
                 <div class="flex space-x-3 w-full md:w-auto justify-end">
-                    <button id="btn-salvar-colecao" class="hidden bg-green-600 hover:bg-green-500 text-white px-5 py-2 rounded-lg font-bold transition-all shadow-[0_0_10px_rgba(22,163,74,0.4)] disabled:opacity-50 disabled:cursor-not-allowed">
-                        Salvar Mudanças
-                    </button>
-                    <button id="btn-editar-colecao" class="bg-gray-700 hover:bg-gray-600 text-white px-5 py-2 rounded-lg font-bold transition-all border border-gray-600">
-                        Editar
-                    </button>
+                    <button id="btn-salvar-colecao" class="hidden bg-green-600 hover:bg-green-500 text-white px-5 py-2 rounded-lg font-bold transition-all shadow-[0_0_10px_rgba(22,163,74,0.4)] disabled:opacity-50">Salvar Mudanças</button>
+                    <button id="btn-editar-colecao" class="bg-gray-700 hover:bg-gray-600 text-white px-5 py-2 rounded-lg font-bold transition-all border border-gray-600">Editar</button>
                 </div>
             </div>
-
-            <!-- BARRA DE PESQUISA E FILTROS -->
+            
             <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div class="w-full md:w-1/2">
-                    <input type="text" id="busca-nome" placeholder="Buscar carta por nome..." class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2.5 text-gray-200 focus:outline-none focus:border-rift-primary transition-colors placeholder-gray-500">
+                    <input type="text" id="busca-nome" placeholder="Buscar carta na coleção..." class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:outline-none focus:border-rift-primary">
                 </div>
                 <div class="w-full md:w-auto min-w-[250px]">
-                    <select id="filtro-quantidade" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2.5 text-gray-200 focus:outline-none focus:border-rift-primary transition-colors cursor-pointer">
+                    <select id="filtro-quantidade" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:outline-none cursor-pointer">
                         <option value="todas">Mostrar Todas</option>
-                        <option value="possuidas">Esconder cartas zeradas (Que eu tenho)</option>
-                        <option value="faltantes">Mostrar apenas zeradas (Faltantes)</option>
+                        <option value="possuidas">Só as que eu tenho</option>
+                        <option value="faltantes">Só as que faltam</option>
                     </select>
                 </div>
             </div>
             
-            <!-- Container onde o JS vai renderizar as cartas que você possui -->
-            <div id="colecao-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                <!-- Vazio propositalmente -->
-            </div>
+            <div id="colecao-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
         </section>
 
-        <!-- Aba: Minha Vitrine (Cartas sendo vendidas) -->
+        <!-- ABA 3: MINHA VITRINE -->
         <section id="vitrine" class="tab-content hidden">
-            <div class="flex justify-between items-end mb-6">
-                <h2 class="text-3xl font-bold text-gray-100 border-l-4 border-rift-primary pl-4">Minha Vitrine</h2>
-                <button class="bg-rift-primary hover:bg-purple-500 text-white px-5 py-2.5 rounded-lg font-bold transition-all shadow-[0_0_15px_rgba(139,92,246,0.4)] hover:shadow-[0_0_25px_rgba(139,92,246,0.6)]">
-                    + Vender Carta
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-100 border-l-4 border-rift-primary pl-4">Minha Vitrine</h2>
+                    <span class="text-sm text-gray-400 block mt-1 ml-5">Coloque suas cartas à venda</span>
+                </div>
+                <div class="flex space-x-3 w-full md:w-auto justify-end">
+                    <button id="btn-salvar-vitrine" class="hidden bg-green-600 hover:bg-green-500 text-white px-5 py-2 rounded-lg font-bold transition-all shadow-[0_0_10px_rgba(22,163,74,0.4)] disabled:opacity-50">Salvar Vitrine</button>
+                    <button id="btn-editar-vitrine" class="bg-gray-700 hover:bg-gray-600 text-white px-5 py-2 rounded-lg font-bold transition-all border border-gray-600">Gerenciar Vitrine</button>
+                </div>
+            </div>
+            <div id="vitrine-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+        </section>
+
+        <!-- ABA 4: BUSCAR CARTAS & CARRINHO -->
+        <section id="busca" class="tab-content hidden relative">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-100 border-l-4 border-rift-primary pl-4">Buscar Cartas</h2>
+                    <span class="text-sm text-gray-400 block mt-1 ml-5">Encontre cartas no mercado</span>
+                </div>
+                <button id="btn-abrir-carrinho" class="bg-rift-panel border border-rift-primary hover:bg-gray-800 text-white px-5 py-2.5 rounded-lg font-bold transition-all shadow-[0_0_10px_rgba(139,92,246,0.3)] flex items-center space-x-2">
+                    <span class="text-xl">🛒</span><span>Carrinho</span>
+                    <span id="contador-carrinho" class="bg-rift-primary text-white text-xs px-2 py-0.5 rounded-full">0</span>
                 </button>
             </div>
-            <!-- Container onde o JS vai renderizar as cartas à venda -->
-            <div id="vitrine-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                <!-- Vazio propositalmente -->
+            
+            <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 mb-6">
+                <input type="text" id="busca-global-input" placeholder="Digite o nome de uma carta..." class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-gray-200 focus:outline-none">
             </div>
-        </section>
+            
+            <div id="busca-resultados-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="col-span-full text-center text-gray-500 py-10">Pesquise cartas acima.</div>
+            </div>
 
-        <!-- Aba: Lojas Parceiras -->
-        <section id="lojas" class="tab-content hidden">
-            <h2 class="text-3xl font-bold mb-6 text-gray-100 border-l-4 border-rift-primary pl-4">Lojas Parceiras</h2>
-            <!-- Container onde o JS vai renderizar os banners/links das lojas -->
-            <div id="lojas-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Vazio propositalmente -->
+            <!-- MODAL: CARRINHO DE COMPRAS -->
+            <div id="modal-carrinho" class="hidden absolute top-0 right-0 w-full md:w-96 bg-gray-800 border border-gray-700 shadow-2xl rounded-lg z-20 flex flex-col max-h-[80vh]">
+                <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-900 rounded-t-lg">
+                    <h3 class="font-bold text-xl text-gray-100">Seu Carrinho</h3>
+                    <button id="btn-fechar-carrinho" class="text-gray-400 hover:text-red-500 font-bold text-xl">&times;</button>
+                </div>
+                <div id="itens-carrinho-container" class="p-4 flex-grow overflow-y-auto space-y-4"></div>
+                <div class="p-4 border-t border-gray-700 bg-gray-900 rounded-b-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-gray-400 font-bold">Total:</span>
+                        <span id="total-carrinho" class="text-rift-accent font-black text-xl">R$ 0.00</span>
+                    </div>
+                    <button id="btn-finalizar-compra" class="w-full bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold shadow-lg transition-colors">Enviar Pedido de Compra</button>
+                </div>
+            </div>
+
+            <!-- MODAL: NOTIFICAÇÕES (VENDAS PENDENTES) -->
+            <div id="modal-notificacoes" class="hidden absolute top-0 right-0 w-full md:w-96 bg-gray-800 border border-gray-700 shadow-2xl rounded-lg z-30 flex flex-col max-h-[80vh]">
+                <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-900 rounded-t-lg">
+                    <h3 class="font-bold text-xl text-gray-100">Pedidos de Compra</h3>
+                    <button id="btn-fechar-notificacoes" class="text-gray-400 hover:text-red-500 font-bold text-xl">&times;</button>
+                </div>
+                <div id="itens-notificacoes-container" class="p-4 flex-grow overflow-y-auto space-y-4">
+                    <p class="text-gray-500 text-center py-4">Nenhum pedido pendente.</p>
+                </div>
             </div>
         </section>
 
     </main>
 
+    <!-- RODAPÉ -->
     <footer class="bg-rift-panel border-t border-gray-800 mt-auto py-6 text-center text-gray-500 text-sm">
         <p>&copy; 2026 Riftbound Marketplace. Protótipo em Desenvolvimento.</p>
     </footer>
 
-    <!-- O "type=module" é crucial para que você possa usar 'import' e 'export' nos seus arquivos JS -->
+    <!-- SCRIPT PRINCIPAL -->
     <script type="module" src="js/main.js"></script>
-    
-    <!-- Script inline básico APENAS para gerenciar o CSS das abas (pode mover para o ui.js depois) -->
-    <style>
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
 </body>
 </html>
