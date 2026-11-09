@@ -61,11 +61,13 @@ export function getMinhaVitrine() {
 
 export function salvarMinhaVitrine(mudancas) {
     if (!bancoDeDados[usuarioLogado].vitrine) bancoDeDados[usuarioLogado].vitrine = {};
+    
     Object.keys(mudancas).forEach(id => {
-        if (!bancoDeDados[usuarioLogado].vitrine[id]) {
-            bancoDeDados[usuarioLogado].vitrine[id] = { precoVenda: mockCartas.find(c => c.id == id).precoBase };
-        }
-        bancoDeDados[usuarioLogado].vitrine[id].qtdVenda = mudancas[id];
+        // Agora 'mudancas' traz tanto a quantidade quanto o preço editado
+        bancoDeDados[usuarioLogado].vitrine[id] = {
+            qtdVenda: mudancas[id].qtdVenda,
+            precoVenda: mudancas[id].precoVenda
+        };
     });
 }
 

@@ -1,5 +1,6 @@
+// js/main.js
 import { setUsuarioLogado, getUsuarioLogado, getMinhaColecao, salvarMinhaColecao, getMinhaVitrine, salvarMinhaVitrine, getLojasMercado, getCartasDaVitrine, pesquisarCartasNoMercado, enviarPedidoDeCompra, getMinhasNotificacoes, responderPedido } from './api.js';
-import { renderizarColecao, renderizarEdicaoVitrine, renderizarListaLojas, renderizarCartasLoja, renderizarCarrinho, renderizarNotificacoes } from './ui.js';
+import { renderizarColecao, renderizarEdicaoVitrine, renderizarListaLojas, renderizarCartasLoja, renderizarCarrinho, renderizarNotificacoes, renderizarResultadosBusca } from './ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -28,19 +29,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const user = getUsuarioLogado();
         headerAvatar.src = user.avatar;
         
-        // Limpa o carrinho ao trocar de conta
         carrinho = [];
         document.getElementById('contador-carrinho').textContent = "0";
         renderizarCarrinho(carrinho, 'itens-carrinho-container', 'total-carrinho');
         
-        // Atualiza as telas
         atualizarTelaColecao();
         atualizarTelaVitrinePessoal();
         renderizarListaLojas(getLojasMercado(), 'mercado-lojas-container');
-        document.getElementById('btn-voltar-mercado').click(); // Volta para a tela de lojas se estiver dentro de uma
-        
-        // Carrega as notificações pendentes dele
+        document.getElementById('btn-voltar-mercado').click(); 
         atualizarNotificacoes();
+
+        // Limpa a busca ao trocar de conta
+        document.getElementById('busca-global-input').value = '';
+        document.getElementById('busca-resultados-container').innerHTML = `<div class="col-span-full text-center text-gray-500 py-10">Use a barra acima para pesquisar cartas no mercado global.</div>`;
     }
 
     function atualizarNotificacoes() {
@@ -58,14 +59,24 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function atualizarTelaColecao() {
         const filtroTipo = document.getElementById('filtro-quantidade').value;
+        const termoBusca = document.getElementById('busca-nome').value.toLowerCase();
+        
         const cartas = getMinhaColecao().filter(carta => {
             const qtdAtual = mudancasColecao[carta.id] !== undefined ? mudancasColecao[carta.id] : carta.quantidade;
-            if (filtroTipo === 'possuidas') return qtdAtual > 0;
-            if (filtroTipo === 'faltantes') return qtdAtual === 0;
-            return true;
+            const passaNaBusca = carta.nome.toLowerCase().includes(termoBusca);
+            
+            let passaNoFiltro = true;
+            if (filtroTipo === 'possuidas') passaNoFiltro = qtdAtual > 0;
+            if (filtroTipo === 'faltantes') passaNoFiltro = qtdAtual === 0;
+            
+            return passaNaBusca && passaNoFiltro;
         });
         renderizarColecao(cartas, 'colecao-container', { isEditMode: isEditModeColecao, mudancasPendentes: mudancasColecao });
     }
+
+    // Ouvintes de busca na coleção
+    document.getElementById('busca-nome').addEventListener('input', atualizarTelaColecao);
+    document.getElementById('filtro-quantidade').addEventListener('change', atualizarTelaColecao);
 
     document.getElementById('btn-editar-colecao').addEventListener('click', (e) => {
         isEditModeColecao = !isEditModeColecao; 
@@ -73,18 +84,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnSalvar = document.getElementById('btn-salvar-colecao');
         
         if (isEditModeColecao) {
-            btn.textContent = "Cancelar Edição"; 
-            btn.classList.replace('bg-gray-700', 'bg-red-600');
-            btnSalvar.classList.remove('hidden'); 
-            btnSalvar.disabled = true; 
+            btn.textContent = "Cancelar Edição"; btn.classList.replace('bg-gray-700', 'bg-red-600');
+            btnSalvar.classList.remove('hidden'); btnSalvar.disabled = true; 
         } else {
-            btn.textContent = "Editar"; 
-            btn.classList.replace('bg-red-600', 'bg-gray-700');
-            btnSalvar.classList.add('hidden'); 
-            mudancasColecao = {}; 
+            btn.textContent = "Editar"; btn.classList.replace('bg-red-600', 'bg-gray-700');
+            btnSalvar.classList.add('hidden'); mudancasColecao = {}; 
         }
-        
-        // Correção aplicada: a função volta a ser chamada e a chave fecha o bloco
         atualizarTelaColecao();
     });
 
@@ -106,8 +111,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btn-salvar-colecao').addEventListener('click', () => {
         salvarMinhaColecao(mudancasColecao);
-        document.getElementById('btn-editar-colecao').click(); // Sai do modo edição
+        document.getElementById('btn-editar-colecao').click(); 
     });
+
 
     // --- VITRINE PESSOAL (A SUA LOJA) ---
     let isEditModeVitrine = false;
@@ -126,17 +132,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnSalvar = document.getElementById('btn-salvar-vitrine');
         
         if (isEditModeVitrine) {
-            btn.textContent = "Cancelar Gerenciamento"; 
-            btn.classList.replace('bg-gray-700', 'bg-red-600');
-            btnSalvar.classList.remove('hidden'); 
-            btnSalvar.disabled = true; 
+            btn.textContent = "Cancelar Gerenciamento"; btn.classList.replace('bg-gray-700', 'bg-red-600');
+            btnSalvar.classList.remove('hidden'); btnSalvar.disabled = true; 
         } else {
-            btn.textContent = "Gerenciar Vitrine"; 
-            btn.classList.replace('bg-red-600', 'bg-gray-700');
-            btnSalvar.classList.add('hidden'); 
-            mudancasVitrine = {}; 
+            btn.textContent = "Gerenciar Vitrine"; btn.classList.replace('bg-red-600', 'bg-gray-700');
+            btnSalvar.classList.add('hidden'); mudancasVitrine = {}; 
         }
         atualizarTelaVitrinePessoal();
+    });
+
+    // Modificar preço e quantidade na Vitrine
+    document.getElementById('vitrine-container').addEventListener('input', (e) => {
+        if (!isEditModeVitrine) return;
+        if (e.target.classList.contains('input-preco-vitrine')) {
+            const id = parseInt(e.target.getAttribute('data-id'));
+            const original = getMinhaVitrine().find(c => c.id === id);
+            
+            if (!mudancasVitrine[id]) mudancasVitrine[id] = { qtdVenda: original.qtdVenda, precoVenda: original.precoVenda };
+            mudancasVitrine[id].precoVenda = parseFloat(e.target.value) || 0;
+            document.getElementById('btn-salvar-vitrine').disabled = false;
+        }
     });
 
     document.getElementById('vitrine-container').addEventListener('click', (e) => {
@@ -144,12 +159,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.classList.contains('btn-mais-vitrine') || e.target.classList.contains('btn-menos-vitrine')) {
             const id = parseInt(e.target.getAttribute('data-id'));
             const original = getMinhaVitrine().find(c => c.id === id);
-            let qtd = mudancasVitrine[id] !== undefined ? mudancasVitrine[id] : original.qtdVenda;
             
-            if (e.target.classList.contains('btn-mais-vitrine')) qtd++;
-            else if (qtd > 0) qtd--;
+            if (!mudancasVitrine[id]) mudancasVitrine[id] = { qtdVenda: original.qtdVenda, precoVenda: original.precoVenda };
             
-            mudancasVitrine[id] = qtd;
+            if (e.target.classList.contains('btn-mais-vitrine')) mudancasVitrine[id].qtdVenda++;
+            else if (mudancasVitrine[id].qtdVenda > 0) mudancasVitrine[id].qtdVenda--;
+            
             document.getElementById('btn-salvar-vitrine').disabled = false;
             atualizarTelaVitrinePessoal();
         }
@@ -158,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-salvar-vitrine').addEventListener('click', () => {
         salvarMinhaVitrine(mudancasVitrine);
         document.getElementById('btn-editar-vitrine').click(); 
-        renderizarListaLojas(getLojasMercado(), 'mercado-lojas-container'); // Atualiza pros outros
+        renderizarListaLojas(getLojasMercado(), 'mercado-lojas-container'); 
     });
 
 
@@ -206,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Mercado
+    // Navegação nas Lojas do Mercado
     document.getElementById('mercado-lojas-container').addEventListener('click', (e) => {
         if (e.target.classList.contains('btn-entrar-loja')) {
             lojaAbertaAtualmente = e.target.getAttribute('data-nome');
@@ -236,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Busca
+    // BUSCA GLOBAL
     const inputBuscaGlobal = document.getElementById('busca-global-input');
     const containerResultados = document.getElementById('busca-resultados-container');
 
@@ -262,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (e.target.classList.contains('btn-ir-vitrine')) {
             const vendedorPuro = e.target.getAttribute('data-vendedor');
-            document.querySelector('[data-target="mercado"]').click();
+            document.querySelector('[data-target="mercado"]').click(); // Força a troca de aba
             lojaAbertaAtualmente = `@${vendedorPuro}`;
             renderizarCartasLoja(getCartasDaVitrine(lojaAbertaAtualmente), 'mercado-cartas-container', carrinho);
             document.getElementById('mercado-lojas-container').classList.add('hidden');
@@ -273,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Carrinho Modal
+    // Controles do Carrinho
     document.getElementById('btn-abrir-carrinho').addEventListener('click', () => document.getElementById('modal-carrinho').classList.toggle('hidden'));
     document.getElementById('btn-fechar-carrinho').addEventListener('click', () => document.getElementById('modal-carrinho').classList.add('hidden'));
 
@@ -285,7 +300,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- FINALIZAR COMPRA ---
     document.getElementById('btn-finalizar-compra').addEventListener('click', () => {
         if (carrinho.length === 0) return;
         enviarPedidoDeCompra(carrinho);
@@ -295,7 +309,8 @@ document.addEventListener('DOMContentLoaded', () => {
         alert("Pedidos enviados! Aguarde os vendedores aceitarem a venda.");
     });
 
-    // --- MODAL DE NOTIFICAÇÕES E ACEITAR/RECUSAR ---
+
+    // --- NOTIFICAÇÕES (SININHO) ---
     document.getElementById('btn-notificacoes').addEventListener('click', () => {
         document.getElementById('modal-notificacoes').classList.toggle('hidden');
     });
@@ -315,6 +330,12 @@ document.addEventListener('DOMContentLoaded', () => {
             atualizarTelaColecao(); 
             atualizarTelaVitrinePessoal(); 
             renderizarListaLojas(getLojasMercado(), 'mercado-lojas-container');
+            
+            // Limpa o termo de busca global para forçar atualização se estiver aberto
+            const termoBusca = document.getElementById('busca-global-input').value;
+            if (termoBusca.length > 0) {
+                renderizarResultadosBusca(pesquisarCartasNoMercado(termoBusca), 'busca-resultados-container', carrinho);
+            }
         }
     });
 

@@ -51,30 +51,41 @@ export function renderizarEdicaoVitrine(cartas, containerId, options = {}) {
     container.innerHTML = ''; 
 
     cartas.forEach(carta => {
-        let qtdVendaAtual = mudancasPendentes[carta.id] !== undefined ? mudancasPendentes[carta.id] : carta.qtdVenda;
+        // Puxa o estado editado ou o original se não mexeu ainda
+        const estadoAtual = mudancasPendentes[carta.id] || { qtdVenda: carta.qtdVenda, precoVenda: carta.precoVenda };
         
-        const isZerada = qtdVendaAtual === 0;
+        const isZerada = estadoAtual.qtdVenda === 0;
         
         const div = document.createElement('div');
-        div.className = `bg-gray-800 rounded-lg p-3 border border-gray-700 transition-all duration-300 relative ${isZerada ? 'grayscale opacity-60' : 'border-rift-primary'}`;
+        // Se estiver zerada E não estiver editando, fica cinza
+        div.className = `bg-gray-800 rounded-lg p-3 border border-gray-700 transition-all duration-300 relative ${isZerada && !isEditMode ? 'grayscale opacity-60' : 'border-rift-primary'}`;
         
         let controlesEdicao = '';
+        let displayPreco = '';
+
         if (isEditMode) {
             controlesEdicao = `
                 <div class="flex justify-between items-center mt-3 bg-gray-900 rounded-md p-1 border border-gray-700">
-                    <button class="btn-menos-vitrine bg-red-500/20 text-red-500 w-7 h-7 rounded font-bold" data-id="${carta.id}">-</button>
-                    <span class="font-bold text-white text-xs">Vendendo: ${qtdVendaAtual}</span>
-                    <button class="btn-mais-vitrine bg-green-500/20 text-green-500 w-7 h-7 rounded font-bold" data-id="${carta.id}">+</button>
+                    <button class="btn-menos-vitrine bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white w-7 h-7 rounded font-bold transition-colors" data-id="${carta.id}">-</button>
+                    <span class="font-bold text-white text-xs">Venda: ${estadoAtual.qtdVenda}</span>
+                    <button class="btn-mais-vitrine bg-green-500/20 text-green-500 hover:bg-green-500 hover:text-white w-7 h-7 rounded font-bold transition-colors" data-id="${carta.id}">+</button>
+                </div>
+                <div class="mt-2 flex items-center justify-between bg-gray-900 rounded-md px-2 py-1.5 border border-gray-700">
+                    <span class="text-xs text-rift-accent font-bold">R$</span>
+                    <input type="number" step="0.50" min="0.01" class="input-preco-vitrine bg-transparent text-white text-right w-full text-sm font-bold focus:outline-none" data-id="${carta.id}" value="${estadoAtual.precoVenda.toFixed(2)}">
                 </div>
             `;
         } else if (!isZerada) {
-            controlesEdicao = `<div class="mt-2 text-center bg-gray-900 rounded p-1 text-xs text-green-400 font-bold border border-green-900">Vendendo ${qtdVendaAtual} un.</div>`;
+            displayPreco = `<div class="mt-1 flex justify-between"><span class="text-rift-accent font-bold text-sm">R$ ${estadoAtual.precoVenda.toFixed(2)}</span></div>`;
+            controlesEdicao = `<div class="mt-2 text-center bg-gray-900 rounded p-1 text-xs text-green-400 font-bold border border-green-900">Vendendo ${estadoAtual.qtdVenda} un.</div>`;
+        } else {
+            controlesEdicao = `<div class="mt-2 text-center bg-gray-900 rounded p-1 text-xs text-gray-500 font-bold border border-gray-700">Não listada na loja</div>`;
         }
 
         div.innerHTML = `
             <img src="${carta.imagem}" class="w-full rounded-md mb-3 object-cover aspect-[3/4]">
             <h3 class="font-bold text-gray-100 text-sm truncate">${carta.nome}</h3>
-            <div class="mt-1 flex justify-between"><span class="text-rift-accent font-bold">R$ ${carta.precoVenda.toFixed(2)}</span></div>
+            ${displayPreco}
             ${controlesEdicao}
         `;
         container.appendChild(div);
